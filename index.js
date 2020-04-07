@@ -99,7 +99,7 @@ function viewDB(){
 
 function viewDepartments(){
     console.log("viewing departments!");
-    var query = "SELECT * FROM department";
+    var query = "SELECT * FROM department;";
     connection.query(query, function(err, res){
         console.table(res);
         begin();
@@ -107,6 +107,11 @@ function viewDepartments(){
 };
 function viewRoles(){
     console.log("Viewing roles!");
+    var query = "SELECT * FROM role;"
+    connection.query(query, function(err, res){
+        console.table(res);
+        begin();
+    });
 };
 function viewEmployees(){
     console.log("Viewing employees!");
