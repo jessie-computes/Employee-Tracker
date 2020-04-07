@@ -1,6 +1,8 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var consoleTable = require("console.table");
+var Employee = require("./class/employee");
+var Role = require("./class/role");
 
 var connection = mysql.createConnection({
   host: "localhost",
