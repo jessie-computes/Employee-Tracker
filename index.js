@@ -30,6 +30,7 @@ function begin() {
         "Add departments, roles, or employees",
         "View departments, roles, or employees",
         "Update employee roles",
+        "Quit this application"
       ],
       message: "What would you like to do today?"
     },
@@ -38,8 +39,10 @@ function begin() {
         addToDB();
       } else if(response.addOrViewOrUpdate === "View departments, roles, or employees"){
         viewDB();
-      }else{
+      }else if(response.addOrViewOrUpdate === "Update employee roles"){
         updateEmployeeRoles();
+      }else{
+          connection.end();
       };
   });
 };
@@ -96,6 +99,11 @@ function viewDB(){
 
 function viewDepartments(){
     console.log("viewing departments!");
+    var query = "SELECT * FROM department";
+    connection.query(query, function(err, res){
+        console.table(res);
+        begin();
+    });
 };
 function viewRoles(){
     console.log("Viewing roles!");
