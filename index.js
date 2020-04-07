@@ -37,9 +37,9 @@ function begin() {
       if(response.addOrViewOrUpdate === "Add departments, roles, or employees"){
         addToDB();
       } else if(response.addOrViewOrUpdate === "View departments, roles, or employees"){
-
+        viewDB();
       }else{
-
+        updateEmployeeRoles();
       };
   });
 };
@@ -75,9 +75,35 @@ function addEmployee(){
 };
 
 function viewDB(){
+    inquirer
+    .prompt([
+        {
+            type: "rawlist",
+            name: "deptOrRoleOrEmployee",
+            choices: ["departments", "roles", "employees"],
+            message: "Would you like to view departments, roles, or employees?"
+        }
+    ]).then(function(response){
+        if(response.deptOrRoleOrEmployee === "departments"){
+            viewDepartments();
+        }else if(response.deptOrRoleOrEmployee === "roles"){
+            viewRoles();
+        } else{
+            viewEmployees();
+        };
+    });
+};
 
+function viewDepartments(){
+    console.log("viewing departments!");
+};
+function viewRoles(){
+    console.log("Viewing roles!");
+};
+function viewEmployees(){
+    console.log("Viewing employees!");
 };
 
 function updateEmployeeRoles(){
-
+    console.log("Updating employee roles!");
 }
