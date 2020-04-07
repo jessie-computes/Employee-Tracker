@@ -107,7 +107,7 @@ function viewDepartments(){
 };
 function viewRoles(){
     console.log("Viewing roles!");
-    var query = "SELECT * FROM role;"
+    var query = "SELECT * FROM role;";
     connection.query(query, function(err, res){
         console.table(res);
         begin();
@@ -115,6 +115,11 @@ function viewRoles(){
 };
 function viewEmployees(){
     console.log("Viewing employees!");
+    var query = "SELECT * FROM employee;";
+    connection.query(query, function(err, res){
+        console.table(res);
+        begin();
+    })
 };
 
 function updateEmployeeRoles(){
