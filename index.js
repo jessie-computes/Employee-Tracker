@@ -180,14 +180,14 @@ function employeeInquirer() {
           response.role,
           function (err, res) {
             var roleID = res[0].id;
-            addEmployee(response.firstName, response.lastName, roleID);
+            managerInquirer(response.firstName, response.lastName, roleID);
           }
         );
       });
   });
 }
 
-function addEmployee(firstName, lastName, roleID) {
+function managerInquirer(firstName, lastName, roleID) {
   console.log(firstName, lastName, roleID);
   inquirer
     .prompt([
@@ -208,7 +208,51 @@ function addEmployee(firstName, lastName, roleID) {
           console.log("Added a new Employee!");
           begin();
         });
+      } else {
+        const managerArray = [];
+        var managerQuery =
+          "SELECT first_name FROM employee_tracker_db.employee;";
+        connection.query(managerQuery, function (err, res) {
+          res.forEach((element) => {
+            managerArray.push(element.first_name);
+          });
+          addEmployee(firstName, lastName, roleID, managerArray);
+        });
       }
+    });
+}
+
+function addEmployee(firstName, lastName, roleID, managerArray) {
+  inquirer
+    .prompt([
+      {
+        type: "rawlist",
+        name: "manager",
+        choices: managerArray,
+        message: "Who is this employee's manager?",
+      },
+    ])
+    .then(function (response) {
+      connection.query(
+        "SELECT id FROM employee_tracker_db.employee WHERE first_name = ?;",
+        response.manager,
+        function (err, res) {
+          var managerID = res[0].id;
+          var newEmployee = new Employee(
+            firstName,
+            lastName,
+            roleID,
+            managerID
+          );
+          connection.query("INSERT INTO employee SET ?", newEmployee, function (
+            err,
+            res
+          ) {
+            console.log("Added a new Employee!");
+            begin();
+          });
+        }
+      );
     });
 }
 
@@ -259,5 +303,76 @@ function viewEmployees() {
 }
 
 function updateEmployeeRoles() {
-  console.log("Updating employee roles!");
+  const employeeArray = [];
+  const roleArray = [];
+  var query = "SELECT first_name FROM employee_tracker_db.employee;";
+  connection.query(query, function (err, res) {
+    res.forEach((element) => {
+      employeeArray.push(element.first_name);
+    });
+    inquirer
+      .prompt([
+        {
+          type: "rawlist",
+          name: "employeeToUpdate",
+          choices: employeeArray,
+          message: "Which employee would you like to update?",
+        },
+      ])
+      .then(function (response) {
+        var roleQuery = "SELECT title FROM employee_tracker_db.role;";
+        var employeeToChange = response.employeeToUpdate;
+        connection.query(roleQuery, function (err, res) {
+          res.forEach((element) => {
+            roleArray.push(element.title);
+          });
+          inquirer
+            .prompt([
+              {
+                type: "rawlist",
+                name: "yeOrNo",
+                message: "Would you like to add a new role?",
+                choices: ["yes", "no"],
+              },
+            ])
+            .then(function (response) {
+              if (response.yeOrNo === "yes") {
+                inquireRole();
+              } else {
+                inquirer
+                  .prompt([
+                    {
+                      type: "rawlist",
+                      name: "newRole",
+                      choices: roleArray,
+                      message: "What is the employee's new role?",
+                    },
+                  ])
+                  .then(function (response) {
+                    var newRole = response.newRole;
+                    updateRole(employeeToChange, newRole);
+                  });
+              }
+            });
+        });
+      });
+  });
+}
+
+function updateRole(employee, newRole) {
+  connection.query(
+    "SELECT id FROM employee_tracker_db.role WHERE title = ?;",
+    newRole,
+    function (err, res) {
+      var newRoleId = res[0].id;
+      connection.query(
+        "UPDATE employee_tracker_db.employee SET role_id = ? WHERE first_name = ?;",
+        [newRoleId, employee],
+        function (err, res) {
+            console.log("Employee role updated!");
+            begin();
+        }
+      );
+    }
+  );
 }
