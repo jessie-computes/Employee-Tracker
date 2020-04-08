@@ -71,7 +71,7 @@ function addToDB() {
       } else if (response.deptOrRoleOrEmployee === "role") {
         inquireRole();
       } else {
-        addEmployee();
+        employeeInquirer();
       }
     });
 }
@@ -147,7 +147,7 @@ function addRole(object) {
   });
 }
 
-function addEmployee() {
+function employeeInquirer() {
   console.log("Adding an employee!");
   var roleArray = [];
   var query = "SELECT title FROM role;";
@@ -180,16 +180,36 @@ function addEmployee() {
           response.role,
           function (err, res) {
             var roleID = res[0].id;
-            var employee = new Employee(
-              response.firstName,
-              response.lastName,
-              roleID
-            );
-            console.log(employee);
+            addEmployee(response.firstName, response.lastName, roleID);
           }
         );
       });
   });
+}
+
+function addEmployee(firstName, lastName, roleID) {
+  console.log(firstName, lastName, roleID);
+  inquirer
+    .prompt([
+      {
+        type: "rawlist",
+        name: "managerYesOrNo",
+        message: "Does this employee have a manager?",
+        choices: ["yes", "no"],
+      },
+    ])
+    .then(function (response) {
+      if (response.managerYesOrNo === "no") {
+        var employee = new Employee(firstName, lastName, roleID, null);
+        connection.query("INSERT INTO employee SET ?", employee, function (
+          err,
+          res
+        ) {
+          console.log("Added a new Employee!");
+          begin();
+        });
+      }
+    });
 }
 
 function viewDB() {
