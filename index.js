@@ -102,10 +102,51 @@ function inquireRole() {
   console.log("Adding a role!");
   var deptArray = [];
   var query = "SELECT name FROM department;";
-  connection.query(query, function(err, res){
-      console.log(res);
+  connection.query(query, function (err, res) {
+    res.forEach((element) => {
+      deptArray.push(element.name);
+    });
+    inquirer
+      .prompt([
+        {
+          type: "rawlist",
+          name: "deptName",
+          message: "What department will this new role be inside of?",
+          choices: deptArray,
+        },
+        {
+          type: "input",
+          name: "roleTitle",
+          message: "What is the title of this new role?",
+        },
+        {
+          type: "input",
+          name: "salary",
+          message:
+            "What is the salary for the new role? Please type numbers only.",
+        },
+      ])
+      .then(function (response) {
+        connection.query(
+          "SELECT id FROM employee_tracker_db.department WHERE name = ?;",
+          response.deptName,
+          function (err, res) {
+            var deptID = res[0].id;
+            var role = new Role(response.roleTitle, response.salary, deptID);
+            addRole(role);
+          }
+        );
+      });
   });
 }
+
+function addRole(object) {
+  connection.query("INSERT INTO role SET ?", object, function (err, res) {
+    console.log("Added a new role!");
+    begin();
+  });
+}
+
 function addEmployee() {
   console.log("Adding an employee!");
   var roleArray = [];
@@ -139,7 +180,11 @@ function addEmployee() {
           response.role,
           function (err, res) {
             var roleID = res[0].id;
-            var employee = new Employee(response.firstName, response.lastName, roleID, );
+            var employee = new Employee(
+              response.firstName,
+              response.lastName,
+              roleID
+            );
             console.log(employee);
           }
         );
