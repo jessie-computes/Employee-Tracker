@@ -103,6 +103,34 @@ function addRole() {
 }
 function addEmployee() {
   console.log("Adding an employee!");
+  roleArray = [];
+  query = "SELECT title FROM role;";
+  connection.query(query, function(err, res){
+      res.forEach(element => {
+          roleArray.push(element.title);
+      });
+      inquirer.prompt([
+        {
+          type: "input",
+          name: "firstName",
+          message: "What is the new employee's first name?",
+        },
+        {
+            type: "input",
+            name: "lastName",
+            message: "What is the employee's last name?"
+        },
+        {
+            type: "rawlist",
+            name: "role",
+            message: "What role does this employee have?",
+            choices: roleArray
+        }
+      ]).then(function(response){
+          
+      })
+  }); 
+
 }
 
 function viewDB() {
