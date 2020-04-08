@@ -180,14 +180,14 @@ function employeeInquirer() {
           response.role,
           function (err, res) {
             var roleID = res[0].id;
-            addEmployee(response.firstName, response.lastName, roleID);
+            managerInquirer(response.firstName, response.lastName, roleID);
           }
         );
       });
   });
 }
 
-function addEmployee(firstName, lastName, roleID) {
+function managerInquirer(firstName, lastName, roleID) {
   console.log(firstName, lastName, roleID);
   inquirer
     .prompt([
@@ -208,7 +208,51 @@ function addEmployee(firstName, lastName, roleID) {
           console.log("Added a new Employee!");
           begin();
         });
+      } else {
+        const managerArray = [];
+        var managerQuery =
+          "SELECT first_name FROM employee_tracker_db.employee;";
+        connection.query(managerQuery, function (err, res) {
+          res.forEach((element) => {
+            managerArray.push(element.first_name);
+          });
+          addEmployee(firstName, lastName, roleID, managerArray);
+        });
       }
+    });
+}
+
+function addEmployee(firstName, lastName, roleID, managerArray) {
+  inquirer
+    .prompt([
+      {
+        type: "rawlist",
+        name: "manager",
+        choices: managerArray,
+        message: "Who is this employee's manager?",
+      },
+    ])
+    .then(function (response) {
+      connection.query(
+        "SELECT id FROM employee_tracker_db.employee WHERE first_name = ?;",
+        response.manager,
+        function (err, res) {
+          var managerID = res[0].id;
+          var newEmployee = new Employee(
+            firstName,
+            lastName,
+            roleID,
+            managerID
+          );
+          connection.query("INSERT INTO employee SET ?", newEmployee, function (
+            err,
+            res
+          ) {
+            console.log("Added a new Employee!");
+            begin();
+          });
+        }
+      );
     });
 }
 
