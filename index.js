@@ -1,6 +1,8 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var consoleTable = require("console.table");
+var Employee = require("./class/employee");
+var Role = require("./class/role");
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -67,9 +69,9 @@ function addToDB() {
       if (response.deptOrRoleOrEmployee === "department") {
         addDepartment();
       } else if (response.deptOrRoleOrEmployee === "role") {
-        addRole();
+        inquireRole();
       } else {
-        addEmployee();
+        employeeInquirer();
       }
     });
 }
@@ -96,11 +98,118 @@ function addDepartment() {
       );
     });
 }
-function addRole() {
+function inquireRole() {
   console.log("Adding a role!");
+  var deptArray = [];
+  var query = "SELECT name FROM department;";
+  connection.query(query, function (err, res) {
+    res.forEach((element) => {
+      deptArray.push(element.name);
+    });
+    inquirer
+      .prompt([
+        {
+          type: "rawlist",
+          name: "deptName",
+          message: "What department will this new role be inside of?",
+          choices: deptArray,
+        },
+        {
+          type: "input",
+          name: "roleTitle",
+          message: "What is the title of this new role?",
+        },
+        {
+          type: "input",
+          name: "salary",
+          message:
+            "What is the salary for the new role? Please type numbers only.",
+        },
+      ])
+      .then(function (response) {
+        connection.query(
+          "SELECT id FROM employee_tracker_db.department WHERE name = ?;",
+          response.deptName,
+          function (err, res) {
+            var deptID = res[0].id;
+            var role = new Role(response.roleTitle, response.salary, deptID);
+            addRole(role);
+          }
+        );
+      });
+  });
 }
-function addEmployee() {
+
+function addRole(object) {
+  connection.query("INSERT INTO role SET ?", object, function (err, res) {
+    console.log("Added a new role!");
+    begin();
+  });
+}
+
+function employeeInquirer() {
   console.log("Adding an employee!");
+  var roleArray = [];
+  var query = "SELECT title FROM role;";
+  connection.query(query, function (err, res) {
+    res.forEach((element) => {
+      roleArray.push(element.title);
+    });
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          name: "firstName",
+          message: "What is the new employee's first name?",
+        },
+        {
+          type: "input",
+          name: "lastName",
+          message: "What is the employee's last name?",
+        },
+        {
+          type: "rawlist",
+          name: "role",
+          message: "What role does this employee have?",
+          choices: roleArray,
+        },
+      ])
+      .then(function (response) {
+        connection.query(
+          "SELECT id FROM employee_tracker_db.role WHERE title = ?;",
+          response.role,
+          function (err, res) {
+            var roleID = res[0].id;
+            addEmployee(response.firstName, response.lastName, roleID);
+          }
+        );
+      });
+  });
+}
+
+function addEmployee(firstName, lastName, roleID) {
+  console.log(firstName, lastName, roleID);
+  inquirer
+    .prompt([
+      {
+        type: "rawlist",
+        name: "managerYesOrNo",
+        message: "Does this employee have a manager?",
+        choices: ["yes", "no"],
+      },
+    ])
+    .then(function (response) {
+      if (response.managerYesOrNo === "no") {
+        var employee = new Employee(firstName, lastName, roleID, null);
+        connection.query("INSERT INTO employee SET ?", employee, function (
+          err,
+          res
+        ) {
+          console.log("Added a new Employee!");
+          begin();
+        });
+      }
+    });
 }
 
 function viewDB() {
