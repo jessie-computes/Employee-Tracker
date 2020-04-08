@@ -69,7 +69,7 @@ function addToDB() {
       if (response.deptOrRoleOrEmployee === "department") {
         addDepartment();
       } else if (response.deptOrRoleOrEmployee === "role") {
-        addRole();
+        inquireRole();
       } else {
         addEmployee();
       }
@@ -98,39 +98,53 @@ function addDepartment() {
       );
     });
 }
-function addRole() {
+function inquireRole() {
   console.log("Adding a role!");
+  var deptArray = [];
+  var query = "SELECT name FROM department;";
+  connection.query(query, function(err, res){
+      console.log(res);
+  });
 }
 function addEmployee() {
   console.log("Adding an employee!");
-  roleArray = [];
-  query = "SELECT title FROM role;";
-  connection.query(query, function(err, res){
-      res.forEach(element => {
-          roleArray.push(element.title);
-      });
-      inquirer.prompt([
+  var roleArray = [];
+  var query = "SELECT title FROM role;";
+  connection.query(query, function (err, res) {
+    res.forEach((element) => {
+      roleArray.push(element.title);
+    });
+    inquirer
+      .prompt([
         {
           type: "input",
           name: "firstName",
           message: "What is the new employee's first name?",
         },
         {
-            type: "input",
-            name: "lastName",
-            message: "What is the employee's last name?"
+          type: "input",
+          name: "lastName",
+          message: "What is the employee's last name?",
         },
         {
-            type: "rawlist",
-            name: "role",
-            message: "What role does this employee have?",
-            choices: roleArray
-        }
-      ]).then(function(response){
-          
-      })
-  }); 
-
+          type: "rawlist",
+          name: "role",
+          message: "What role does this employee have?",
+          choices: roleArray,
+        },
+      ])
+      .then(function (response) {
+        connection.query(
+          "SELECT id FROM employee_tracker_db.role WHERE title = ?;",
+          response.role,
+          function (err, res) {
+            var roleID = res[0].id;
+            var employee = new Employee(response.firstName, response.lastName, roleID, );
+            console.log(employee);
+          }
+        );
+      });
+  });
 }
 
 function viewDB() {
